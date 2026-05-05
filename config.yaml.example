@@ -1,0 +1,21 @@
+server:
+  port: 8080
+  logLevel: info
+  validateModelsOnStartup: true
+
+fallback:
+  maxFallbacks: -1  # -1 = unlimited, 0 = disabled
+  perAttemptTimeout: 30s
+  retryOnCodes: [429, 500, 502, 503, 504]
+
+models:
+# fallback priority: first model is tried first
+# format: {provider}/{model}
+- gemini/gemini-2.5-flash
+- ollama/gemma4:31b
+
+providers:
+  gemini:
+    apiKey: YOUR_GEMINI_API_KEY
+  ollama:
+    apiKey: YOUR_OLLAMA_API_KEY
