@@ -3,6 +3,7 @@ name: Auto Assign
 on:
   pull_request:
     types: [opened, reopened]
+  workflow_dispatch:
 
 permissions:
   contents: read
