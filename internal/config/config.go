@@ -1,6 +1,7 @@
 package config
 
 import (
+	"bytes"
 	"fmt"
 	"os"
 	"strings"
@@ -31,7 +32,7 @@ type ProviderConfig struct {
 }
 
 type FallbackConfig struct {
-	MaxFallbacks      int           `yaml:"maxFallbacks"`
+	MaxFallbacks      *int          `yaml:"maxFallbacks"`
 	RetryOnCodes      []int         `yaml:"retryOnCodes"`
 	PerAttemptTimeout time.Duration `yaml:"perAttemptTimeout"`
 }
@@ -73,7 +74,11 @@ func LoadConfig(path string) (*Config, error) {
 		defaultValue := true
 		cfg.Server.ValidateModelsOnStartup = &defaultValue
 	}
-	if cfg.Fallback.MaxFallbacks < -1 {
+	if cfg.Fallback.MaxFallbacks == nil {
+		defaultFallbacks := -1
+		cfg.Fallback.MaxFallbacks = &defaultFallbacks
+	}
+	if *cfg.Fallback.MaxFallbacks < -1 {
 		return nil, fmt.Errorf("config fallback.maxFallbacks must be >= -1")
 	}
 	if len(cfg.Fallback.RetryOnCodes) == 0 {
@@ -98,4 +103,30 @@ func LoadConfig(path string) (*Config, error) {
 	}
 
 	return &cfg, nil
+}
+
+func RedactedYAML(cfg *Config) (string, error) {
+	if cfg == nil {
+		return "", fmt.Errorf("config is nil")
+	}
+
+	redacted := *cfg
+	redacted.Providers = make(map[string]ProviderConfig, len(cfg.Providers))
+	for name, provider := range cfg.Providers {
+		copyProvider := provider
+		if strings.TrimSpace(copyProvider.APIKey) != "" {
+			copyProvider.APIKey = "[redacted]"
+		}
+		redacted.Providers[name] = copyProvider
+	}
+
+	var buf bytes.Buffer
+	enc := yaml.NewEncoder(&buf)
+	enc.SetIndent(2)
+	err := enc.Encode(&redacted)
+	_ = enc.Close()
+	if err != nil {
+		return "", fmt.Errorf("marshal redacted config: %w", err)
+	}
+	return buf.String(), nil
 }

@@ -292,7 +292,10 @@ func (g *Gateway) callWithFallback(req ChatCompletionRequest, modelChain []strin
 	if len(modelChain) == 0 {
 		return nil, "", nil, fmt.Errorf("no models configured")
 	}
-	maxFallbacks := g.cfg.Fallback.MaxFallbacks
+	maxFallbacks := -1
+	if g.cfg.Fallback.MaxFallbacks != nil {
+		maxFallbacks = *g.cfg.Fallback.MaxFallbacks
+	}
 	attemptLimit := len(modelChain)
 	switch {
 	case maxFallbacks == 0:
