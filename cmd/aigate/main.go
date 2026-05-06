@@ -20,6 +20,11 @@ func main() {
 	if err != nil {
 		log.Fatalf("failed to load config: %v", err)
 	}
+	redactedCfg, err := config.RedactedYAML(cfg)
+	if err != nil {
+		log.Fatalf("failed to render startup config: %v", err)
+	}
+	log.Printf("loaded config:\n%s", redactedCfg)
 
 	gw, err := gateway.NewGateway(cfg)
 	if err != nil {
