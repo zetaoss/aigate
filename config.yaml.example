@@ -4,10 +4,8 @@ server:
   validateModelsOnStartup: true
 
 fallback:
-  # -1 = unlimited, 0 = disabled
-  maxFallbacks: -1
+  rounds: 2
   perAttemptTimeout: 30s
-  retryOnCodes: [429, 500, 502, 503, 504]
 
 models:
   # fallback priority: first model is tried first
