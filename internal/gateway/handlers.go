@@ -292,22 +292,16 @@ func (g *Gateway) callWithFallback(req ChatCompletionRequest, modelChain []strin
 	if len(modelChain) == 0 {
 		return nil, "", nil, fmt.Errorf("no models configured")
 	}
-	maxFallbacks := -1
-	if g.cfg.Fallback.MaxFallbacks != nil {
-		maxFallbacks = *g.cfg.Fallback.MaxFallbacks
+	fallbackRounds := g.cfg.Fallback.Rounds
+	if fallbackRounds < 1 {
+		fallbackRounds = 2
 	}
-	attemptLimit := len(modelChain)
-	switch {
-	case maxFallbacks == 0:
-		attemptLimit = 1
-	case maxFallbacks > 0 && maxFallbacks+1 < attemptLimit:
-		attemptLimit = maxFallbacks + 1
-	}
+	attemptLimit := len(modelChain) * fallbackRounds
 	attempted := make([]string, 0, attemptLimit)
 	var lastErr error
 
 	for i := 0; i < attemptLimit; i++ {
-		modelID := modelChain[i]
+		modelID := modelChain[i%len(modelChain)]
 		attempted = append(attempted, modelID)
 		route := g.modelRoutes[modelID]
 		localReq := req
@@ -322,7 +316,7 @@ func (g *Gateway) callWithFallback(req ChatCompletionRequest, modelChain []strin
 			return normalizedBody, modelID, append([]string(nil), attempted...), nil
 		}
 		lastErr = err
-		if !g.shouldFallback(err) || i == attemptLimit-1 {
+		if i == attemptLimit-1 {
 			return nil, "", append([]string(nil), attempted...), fmt.Errorf("attempted models=%s: %w", strings.Join(attempted, ","), err)
 		}
 		g.logError("fallback next model after failure model=%s err=%v", modelID, err)
@@ -352,25 +346,6 @@ func addProviderMeta(responseBody []byte, requestedModel string, attemptedModels
 		return nil, fmt.Errorf("marshal response with provider_meta: %w", err)
 	}
 	return updated, nil
-}
-
-func (g *Gateway) shouldFallback(err error) bool {
-	callErr, ok := err.(*providerCallError)
-	if !ok {
-		return false
-	}
-	if callErr.Timeout {
-		return true
-	}
-	if callErr.StatusCode == 0 {
-		return false
-	}
-	for _, code := range g.cfg.Fallback.RetryOnCodes {
-		if code == callErr.StatusCode {
-			return true
-		}
-	}
-	return false
 }
 
 func writeJSON(w http.ResponseWriter, status int, payload any) {

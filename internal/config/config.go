@@ -32,8 +32,7 @@ type ProviderConfig struct {
 }
 
 type FallbackConfig struct {
-	MaxFallbacks      *int          `yaml:"maxFallbacks"`
-	RetryOnCodes      []int         `yaml:"retryOnCodes"`
+	Rounds            int           `yaml:"rounds"`
 	PerAttemptTimeout time.Duration `yaml:"perAttemptTimeout"`
 }
 
@@ -74,20 +73,11 @@ func LoadConfig(path string) (*Config, error) {
 		defaultValue := true
 		cfg.Server.ValidateModelsOnStartup = &defaultValue
 	}
-	if cfg.Fallback.MaxFallbacks == nil {
-		defaultFallbacks := -1
-		cfg.Fallback.MaxFallbacks = &defaultFallbacks
+	if cfg.Fallback.Rounds == 0 {
+		cfg.Fallback.Rounds = 2
 	}
-	if *cfg.Fallback.MaxFallbacks < -1 {
-		return nil, fmt.Errorf("config fallback.maxFallbacks must be >= -1")
-	}
-	if len(cfg.Fallback.RetryOnCodes) == 0 {
-		cfg.Fallback.RetryOnCodes = []int{429, 500, 502, 503, 504}
-	}
-	for _, code := range cfg.Fallback.RetryOnCodes {
-		if code < 100 || code > 599 {
-			return nil, fmt.Errorf("config fallback.retryOnCodes must be valid HTTP status codes")
-		}
+	if cfg.Fallback.Rounds < 1 {
+		return nil, fmt.Errorf("config fallback.rounds must be >= 1")
 	}
 	if cfg.Fallback.PerAttemptTimeout == 0 {
 		cfg.Fallback.PerAttemptTimeout = 30 * time.Second

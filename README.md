@@ -21,8 +21,7 @@ server:
   validateModelsOnStartup: true
 
 fallback:
-  maxFallbacks: -1
-  retryOnCodes: [429, 500, 502, 503, 504]
+  rounds: 2
   perAttemptTimeout: 30s
 
 models:
@@ -47,8 +46,8 @@ The gateway loads each provider's available model list once during startup and k
 `models` uses `{provider}/{model}` and splits on the first `/`, so model ids containing `/` are supported.
 `model` omission is always allowed and routes by configured model order.
 When `model` is specified, fallback is always allowed within the resolved model chain.
-`fallback.maxFallbacks: -1` means unlimited, `0` disables fallback, and `>0` caps fallback count.
-`fallback.perAttemptTimeout` is per-attempt HTTP timeout and timeout errors are fallback-eligible.
+`fallback.rounds` controls how many full passes of the resolved model chain are attempted (default: `2`).
+`fallback.perAttemptTimeout` is per-attempt HTTP timeout.
 
 ## Usage Examples
 
