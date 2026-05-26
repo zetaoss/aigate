@@ -41,8 +41,7 @@ jobs:
               head: context.ref.replace('refs/heads/', ''),
               base,
               title: `Auto PR: ${context.ref.replace('refs/heads/', '')}`,
-              body: `Automatically opened from branch \`${context.ref.replace('refs/heads/', '')}\`.`,
-              draft: true
+              body: `Automatically opened from branch \`${context.ref.replace('refs/heads/', '')}\`.`
             });
 
             core.info(`Created PR #${pr.data.number}`);
