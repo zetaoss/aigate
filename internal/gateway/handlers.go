@@ -356,8 +356,10 @@ func writeJSON(w http.ResponseWriter, status int, payload any) {
 
 func LoggingMiddleware(g *Gateway, next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		logEntry := fmt.Sprintf("%s %s from %s", r.Method, r.URL.Path, r.RemoteAddr)
-		g.logInfo("%s", logEntry)
+		if r.URL.Path != "/healthz" {
+			logEntry := fmt.Sprintf("%s %s from %s", r.Method, r.URL.Path, r.RemoteAddr)
+			g.logInfo("%s", logEntry)
+		}
 		next.ServeHTTP(w, r)
 	})
 }
