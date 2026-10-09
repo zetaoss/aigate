@@ -1,8 +1,6 @@
-
+# AI Gateway (Go)
 
 > **Archived.** This service moved into [zetaoss/bob](https://github.com/zetaoss/bob) as `/aigate`.
-
-# AI Gateway (Go)
 
 A simple Go-based AI proxy gateway. It centralizes AI model calls and routes requests to multiple providers such as Gemini and Ollama under a single `/v1` API.
 
